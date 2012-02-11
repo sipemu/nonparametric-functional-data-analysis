@@ -1,0 +1,3 @@
+Changes in Version 0.2-2:
+	o Added semimetric based on partial least squares
+	o Added bootstrap confidence intervals for prediction
