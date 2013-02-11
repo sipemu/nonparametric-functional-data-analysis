@@ -7,7 +7,7 @@ FuNopaCl <- function(X, classes, semimetric = "Deriv", semimetric.params) {
   Dist <- Semimetric (X, X, z$Semimetric, z$semimetric.params)
   DistMat <- Dist$semimetric
   
-  k <- .Call ("KernelClassificationkNNlCV", 
+  k <- .Call (.NAME = "KernelClassificationkNNlCV", 
               DistMat, 
               classes, 
               20, 
