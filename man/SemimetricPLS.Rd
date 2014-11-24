@@ -43,7 +43,7 @@ Y <- Fatvalues
 q <- 4
 
 # calculate distance matrix
-Dist1 <- SemimetricPLS (X[1:100],
+Dist1 <- SemimetricPLS (Y[1:100],
                         X[1:100, ], 
                         X[101:150, ], 
                         q)
