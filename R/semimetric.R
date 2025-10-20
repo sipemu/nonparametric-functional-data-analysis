@@ -23,9 +23,10 @@ Semimetric <- function(Data1, Data2, semimetric, semimetric.params) {
                                    q = semimetric.params$q,
                                    EigenVec = semimetric.params$EigenVec)
   } else if (semimetric == "SemimetricPLS") {
-    Dist <- SemimetricPLS(Data1, 
-                           Data2, 
-                           q = semimetric.params$q)
+    Dist <- SemimetricPLS(Response = semimetric.params$y,
+                          Data1, 
+                          Data2, 
+                          q = semimetric.params$q)
   } else {
     stop("Unknown semimetric type")
   }
@@ -48,8 +49,8 @@ semimetric_deriv_wrapper <- function(Data1, Data2,
                             q = 2, nknot = 20, range.grid = c(0, 1), 
                              Hhalf = NULL) {
     
-    if (is.vector(Data1)) Data1 <- as.matrix(t(Data1))
-    if (is.vector(Data2)) Data2 <- as.matrix(t(Data2))
+  if (is.vector(Data1)) Data1 <- as.matrix(t(Data1))
+  if (is.vector(Data2)) Data2 <- as.matrix(t(Data2))
   testfordim <- sum(dim(Data1) == dim(Data2)) == 2
   twodatasets <- TRUE
   if (testfordim) twodatasets <- sum(Data1 == Data2) != prod(dim(Data1))
@@ -176,5 +177,5 @@ SemimetricPLS <- function(Response, Data1, Data2, q) {
     Semimetric <- Semimetric + outer(Comp1[, g], Comp2[, g], "-")^2
   }
   
-  return(sqrt(Semimetric))
+  return(list(semimetric = sqrt(Semimetric)))
 }

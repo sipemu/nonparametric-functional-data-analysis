@@ -12,22 +12,22 @@ Description: Nonparametric methods for functional data analysis including
     semimetrics (PCA, derivatives, PLS) with various bandwidth selection 
     techniques. Originally based on methods by Ferraty and Vieu.
 License: MIT + file LICENSE
-LazyData: true
+LazyData: false
 Depends: 
     R (>= 3.5.0)
 Imports: 
     Rcpp (>= 1.0.0),
     splines,
-    stats,
-    fds
+    stats
 LinkingTo: 
     Rcpp,
     RcppArmadillo (>= 0.9.0)
 Suggests: 
     pls,
+    fds,
     testthat (>= 3.0.0)
 Encoding: UTF-8
 RoxygenNote: 7.3.3
-SystemRequirements: C++11
+NeedsCompilation: yes
 URL: https://github.com/sipemu/nonparametric-functional-data-analysis
 BugReports: https://github.com/sipemu/nonparametric-functional-data-analysis/issues

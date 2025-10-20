@@ -60,7 +60,7 @@ FuNopaRe <- function(X,
     # k-NN global cross-validation
     k <- KernelPredictionkNNgCV(DistMat, Y, 20L)
     
-    z$k.opt <- k$kopt
+    z$k.opt <- k$kopt + 1
     z$mse.learn <- k$mse
     z$Y.hat <- k$yhat
     
@@ -68,7 +68,7 @@ FuNopaRe <- function(X,
     # k-NN local cross-validation
     k <- KernelPredictionkNNlCV(DistMat, Y, 20L)
     
-    z$k.opt <- as.vector(k$kopt)
+    z$k.opt <- as.vector(k$kopt) + 1
     z$mse.learn <- k$mse
     z$Y.hat <- k$yhat
     

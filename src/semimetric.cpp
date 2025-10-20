@@ -70,8 +70,8 @@ arma::mat SemimetricPCA(const arma::mat& Eigenvec,
         for (int i = 0; i < q; i++) {
             arma::vec tempvec = Comp1.col(i);
             // Outer difference: outer(x, y, "-") creates matrix where M[i,j] = x[i] - y[j]
-            for (arma::uword row = 0; row < n; row++) {
-                for (arma::uword col = 0; col < n; col++) {
+            for (int row = 0; row < n; row++) {
+                for (int col = 0; col < n; col++) {
                     double diff = tempvec(row) - tempvec(col);
                     Semimetric(row, col) += diff * diff;
                 }
@@ -88,8 +88,8 @@ arma::mat SemimetricPCA(const arma::mat& Eigenvec,
             arma::vec tempvec1 = Comp1.col(i);
             arma::vec tempvec2 = Comp2.col(i);
             
-            for (arma::uword row = 0; row < n; row++) {
-                for (arma::uword col = 0; col < m; col++) {
+            for (int row = 0; row < n; row++) {
+                for (int col = 0; col < m; col++) {
                     double diff = tempvec1(row) - tempvec2(col);
                     Semimetric(row, col) += diff * diff;
                 }
@@ -177,8 +177,8 @@ arma::mat SemimetricDeriv(const arma::mat& Hhalf,
         for (int i = 0; i < nbasis; i++) {
             arma::vec tempvec = Coef1.col(i);
             
-            for (arma::uword row = 0; row < n; row++) {
-                for (arma::uword col = 0; col < n; col++) {
+            for (int row = 0; row < n; row++) {
+                for (int col = 0; col < n; col++) {
                     double diff = tempvec(row) - tempvec(col);
                     Semimetric(row, col) += diff * diff;
                 }
@@ -197,8 +197,8 @@ arma::mat SemimetricDeriv(const arma::mat& Hhalf,
             arma::vec tempvec1 = Coef1.col(i);
             arma::vec tempvec2 = Coef2.col(i);
             
-            for (arma::uword row = 0; row < n; row++) {
-                for (arma::uword col = 0; col < m; col++) {
+            for (int row = 0; row < n; row++) {
+                for (int col = 0; col < m; col++) {
                     double diff = tempvec1(row) - tempvec2(col);
                     Semimetric(row, col) += diff * diff;
                 }

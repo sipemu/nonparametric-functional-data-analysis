@@ -71,8 +71,8 @@ BootstrapKStest <- function(Residuals, NB = 100, grid = 10) {
   for (i in 1:grid) {
     # Generate two-point distribution samples
     W <- matrix(
-      data = sample(
-        x = c(a.seq[i], -1 / a.seq[i]), 
+      sample(
+        c(a.seq[i], -1 / a.seq[i]), 
         size = n * NB, 
         replace = TRUE, 
         prob = c(1 / (1 + a.seq[i]^2), a.seq[i]^2 / (1 + a.seq[i]^2))
@@ -98,8 +98,8 @@ BootstrapKStest <- function(Residuals, NB = 100, grid = 10) {
   
   # Generate final bootstrap samples with optimal parameter
   result <- Residuals * matrix(
-    x = sample(
-      x = c(a.seq[k], -1 / a.seq[k]), 
+    sample(
+      c(a.seq[k], -1 / a.seq[k]), 
       size = n * NB, 
       replace = TRUE, 
       prob = c(1 / (1 + a.seq[k]^2), a.seq[k]^2 / (1 + a.seq[k]^2))

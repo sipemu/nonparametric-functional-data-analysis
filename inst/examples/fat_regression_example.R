@@ -74,7 +74,11 @@ cat("  Training MSE:", round(model_deriv$mse.learn, 4), "\n\n")
 
 # Make predictions on test set
 cat("Making predictions on test set...\n")
-pred_deriv <- predict(model_deriv, X_test)
+bootstrap.params <- list("Resampling.Method" = "homoscedatic", 
+                         "NB" = 500, 
+                         "neighbours" = 10, 
+                         "alpha" = 0.2)
+pred_deriv <- predict(model_deriv, X_test, method.params = bootstrap.params, Bootstrapping = T)
 
 # Calculate test MSE and R-squared
 test_mse <- mean((pred_deriv$Prediction - Y_test)^2)
@@ -89,37 +93,37 @@ cat("  MAE:", round(test_mae, 4), "\n")
 cat("  R-squared:", round(r_squared, 4), "\n\n")
 
 # ============================================================================
-# Example 2: PCA-based semimetric
+# Example 2: PLS-based semimetric
 # ============================================================================
-cat("Example 2: PCA-based semimetric\n")
+cat("Example 2: PLS-based semimetric\n")
 cat("---------------------------------------\n")
 
-params_pca <- list(
-  q = 15,             # Number of principal components
-  EigenVec = NULL     # Will be computed automatically
+params_pls <- list(
+  q = 25, 
+  y = Y_train
 )
 
-cat("Fitting model with PCA semimetric...\n")
-model_pca <- FuNopaRe(X_train, Y_train, 
-                      semimetric = "PCA", 
-                      semimetric.params = params_pca,
+cat("Fitting model with PLS semimetric...\n")
+model_pls <- FuNopaRe(X_train, Y_train, 
+                      semimetric = "PLS", 
+                      semimetric.params = params_pls,
                       bandwidth = "kNNgCV")
 
-cat("  Optimal k:", model_pca$k.opt, "\n")
-cat("  Training MSE:", round(model_pca$mse.learn, 4), "\n\n")
+cat("  Optimal k:", model_pls$k.opt, "\n")
+cat("  Training MSE:", round(model_pls$mse.learn, 4), "\n\n")
 
 # Make predictions
-pred_pca <- predict(model_pca, X_test)
+pred_pls <- predict(model_pls, X_test)
 
-test_mse_pca <- mean((pred_pca$Prediction - Y_test)^2)
-test_mae_pca <- mean(abs(pred_pca$Prediction - Y_test))
-ss_res_pca <- sum((Y_test - pred_pca$Prediction)^2)
-r_squared_pca <- 1 - ss_res_pca / ss_tot
+test_mse_pls <- mean((pred_pls$Prediction - Y_test)^2)
+test_mae_pls <- mean(abs(pred_pls$Prediction - Y_test))
+ss_res_pls <- sum((Y_test - pred_pls$Prediction)^2)
+r_squared_pls <- 1 - ss_res_pls / ss_tot
 
 cat("Test set performance:\n")
-cat("  MSE:", round(test_mse_pca, 4), "\n")
-cat("  MAE:", round(test_mae_pca, 4), "\n")
-cat("  R-squared:", round(r_squared_pca, 4), "\n\n")
+cat("  MSE:", round(test_mse_pls, 4), "\n")
+cat("  MAE:", round(test_mae_pls, 4), "\n")
+cat("  R-squared:", round(r_squared_pls, 4), "\n\n")
 
 # ============================================================================
 # Example 3: Local cross-validation
@@ -129,8 +133,8 @@ cat("-------------------------------------------------------\n")
 
 cat("Fitting model with kNN local CV...\n")
 model_local <- FuNopaRe(X_train, Y_train, 
-                        semimetric = "Deriv", 
-                        semimetric.params = params_deriv,
+                        semimetric = "PLS", 
+                        semimetric.params = params_pls,
                         bandwidth = "kNNlCV")
 
 cat("  Number of different k values used:", length(unique(model_local$k.opt)), "\n")
@@ -138,13 +142,16 @@ cat("  k range: [", min(model_local$k.opt), ",", max(model_local$k.opt), "]\n")
 cat("  Training MSE:", round(model_local$mse.learn, 4), "\n\n")
 
 # Make predictions
-pred_local <- predict(model_local, X_test)
+bootstrap.params <- list("Resampling.Method" = "homoscedatic", "NB" = 200, "neighbours" = 20, "alpha" = 0.05)
+pred_local <- predict(model_local, X_test, method.params = bootstrap.params, Bootstrapping = T)
 
 test_mse_local <- mean((pred_local$Prediction - Y_test)^2)
+test_mae_local <- mean(abs(pred_local$Prediction - Y_test))
 r_squared_local <- 1 - sum((Y_test - pred_local$Prediction)^2) / ss_tot
 
 cat("Test set performance:\n")
 cat("  MSE:", round(test_mse_local, 4), "\n")
+cat("  MAE:", round(test_mae_local, 4), "\n")
 cat("  R-squared:", round(r_squared_local, 4), "\n\n")
 
 # ============================================================================
@@ -155,9 +162,9 @@ cat("Summary of Methods\n")
 cat("====================================\n\n")
 
 results <- data.frame(
-  Method = c("Deriv + kNN Global", "PCA + kNN Global", "Deriv + kNN Local"),
-  Test_MSE = c(test_mse, test_mse_pca, test_mse_local),
-  R_squared = c(r_squared, r_squared_pca, r_squared_local)
+  Method = c("Deriv + kNN Global", "PLS + kNN Global", "Deriv + kNN Local"),
+  Test_MSE = c(test_mse, test_mse_pls, test_mse_local),
+  R_squared = c(r_squared, r_squared_pls, r_squared_local)
 )
 
 print(results, row.names = FALSE)
