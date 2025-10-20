@@ -1,6 +1,6 @@
 # nfda: Nonparametric Functional Data Analysis
 
-[![License: GPL-2](https://img.shields.io/badge/License-GPL%202-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Overview
 
