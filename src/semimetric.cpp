@@ -1,196 +1,209 @@
 //
 //  semimetric.cpp
-//  
+//  Modern implementation with Rcpp attributes
 //
-//  Created by Simon Müller on 18.08.11.
+//  Originally created by Simon Müller on 18.08.11.
+//  Modernized for current C++ and Rcpp standards
 //
 //  Original written in R by Ferraty and Vieu. More semimetrics are available
 //  on their website http://www.math.univ-toulouse.fr/staph/npfda/ 
 
+// [[Rcpp::depends(RcppArmadillo)]]
+#include <RcppArmadillo.h>
 #include "semimetric.h"
 
-/*
- 
-        SEMIMETRIC BASED ON PCA
- 
-*/
-RcppExport SEXP SemimetricPCAEV(SEXP Data1, SEXP q) {
-
-    Rcpp::NumericMatrix D1r(Data1);
-    int qq = Rcpp::as<int>(q);
-    int n = D1r.nrow();
-    arma::mat D1(D1r.begin(), D1r.nrow(), D1r.ncol(), false);
+//' Semimetric PCA Eigenvector Calculation
+//' 
+//' Calculates eigenvectors for PCA-based semimetric
+//' 
+//' @param Data1 Numeric matrix of functional data
+//' @param q Integer number of principal components
+//' @return Numeric matrix of eigenvectors
+//' @keywords internal
+// [[Rcpp::export]]
+arma::mat SemimetricPCAEV(const arma::mat& Data1, int q) {
+    
+    const int n = Data1.n_rows;
+    
+    // Calculate covariance matrix and eigendecomposition
+    arma::mat Cov = Data1.t() * Data1 / n;
     arma::vec eigval;
     arma::mat Eigvec;
-    arma::mat Eigvecnq;
     
-    arma::mat Cov = trans(D1) * D1 / n;
     arma::eig_sym(eigval, Eigvec, Cov);
-    Eigvecnq.zeros(Eigvec.n_rows, qq);
-    for(int i = 0; i < qq; i++) {
+    
+    // Select q largest eigenvectors (they are in ascending order)
+    arma::mat Eigvecnq(Eigvec.n_rows, q);
+    for (int i = 0; i < q; i++) {
         Eigvecnq.col(i) = Eigvec.col(Eigvec.n_cols - i - 1);
     }
-    return Rcpp::wrap(Eigvecnq);
+    
+    return Eigvecnq;
 }
 
-RcppExport SEXP SemimetricPCA(SEXP Eigenvec, SEXP Data1, SEXP Data2, SEXP twodatasets) {
+//' Semimetric Based on PCA
+//' 
+//' Computes semimetric distance based on principal component analysis
+//' 
+//' @param Eigenvec Numeric matrix of eigenvectors
+//' @param Data1 Numeric matrix of functional data (first dataset)
+//' @param Data2 Numeric matrix of functional data (second dataset)
+//' @param twodatasets Logical indicating if two datasets are used
+//' @return Numeric matrix of semimetric distances
+//' @keywords internal
+// [[Rcpp::export]]
+arma::mat SemimetricPCA(const arma::mat& Eigenvec, 
+                        const arma::mat& Data1, 
+                        const arma::mat& Data2, 
+                        bool twodatasets) {
     
-    Rcpp::NumericMatrix D1r(Data1);
-    Rcpp::NumericMatrix Evr(Eigenvec);
-    bool tds = Rcpp::as<bool>(twodatasets);
-    int n = D1r.nrow();
-    int q = Evr.ncol();
+    const int n = Data1.n_rows;
+    const int q = Eigenvec.n_cols;
     
-    Rcpp::NumericMatrix Comp1r(n, q);
-    arma::mat Comp1(Comp1r.begin(), Comp1r.nrow(), Comp1r.ncol(), false);
-    arma::mat D1(D1r.begin(), D1r.nrow(), D1r.ncol(), false);
-    arma::mat Ev(Evr.begin(), Evr.nrow(), Evr.ncol(), false);
+    // Calculate principal components for first dataset
+    arma::mat Comp1 = Data1 * Eigenvec;
     
-    Comp1 = D1 * Ev;
-    
-    if (!tds) {
-        arma::mat Semimetric;
-        Semimetric.zeros(n, n);
-        Rcpp::NumericMatrix Tempr;
-        Rcpp::NumericVector tempvec;
+    if (!twodatasets) {
+        // Single dataset case
+        arma::mat Semimetric = arma::zeros<arma::mat>(n, n);
+        
         for (int i = 0; i < q; i++) {
-            tempvec = Comp1r(Rcpp::_, i);
-            Tempr = Rcpp::outer(tempvec, tempvec, std::minus<double>());
-            Semimetric = Semimetric + arma::square(Rcpp::as<arma::mat>(Tempr));
+            arma::vec tempvec = Comp1.col(i);
+            // Outer difference: outer(x, y, "-") creates matrix where M[i,j] = x[i] - y[j]
+            for (arma::uword row = 0; row < n; row++) {
+                for (arma::uword col = 0; col < n; col++) {
+                    double diff = tempvec(row) - tempvec(col);
+                    Semimetric(row, col) += diff * diff;
+                }
+            }
         }
-        return Rcpp::wrap(arma::sqrt(Semimetric));
+        return arma::sqrt(Semimetric);
     } else {
-        Rcpp::NumericMatrix D2r(Data2);
-        int m = D2r.nrow();
-        Rcpp::NumericMatrix Comp2r(m, q);
-        arma::mat Comp2(Comp2r.begin(), Comp2r.nrow(), Comp2r.ncol(), false);
-        arma::mat D2(D2r.begin(), D2r.nrow(), D2r.ncol(), false);
+        // Two datasets case
+        const int m = Data2.n_rows;
+        arma::mat Comp2 = Data2 * Eigenvec;
+        arma::mat Semimetric = arma::zeros<arma::mat>(n, m);
         
-        arma::mat Semimetric;
-        Semimetric.zeros(n, m);
-        Rcpp::NumericMatrix Tempr;
-        
-        Comp2 = D2 * Ev;
-        
-        Rcpp::NumericVector tempvec1;
-        Rcpp::NumericVector tempvec2;
         for (int i = 0; i < q; i++) {
-            tempvec1 = Comp1r(Rcpp::_, i);
-            tempvec2 = Comp2r(Rcpp::_, i);
-            Tempr = Rcpp::outer(tempvec1, tempvec2, std::minus<double>());
-            Semimetric = Semimetric + arma::square(Rcpp::as<arma::mat>(Tempr));
+            arma::vec tempvec1 = Comp1.col(i);
+            arma::vec tempvec2 = Comp2.col(i);
+            
+            for (arma::uword row = 0; row < n; row++) {
+                for (arma::uword col = 0; col < m; col++) {
+                    double diff = tempvec1(row) - tempvec2(col);
+                    Semimetric(row, col) += diff * diff;
+                }
+            }
         }
-        return Rcpp::wrap(arma::sqrt(Semimetric)); 
+        return arma::sqrt(Semimetric);
     }
 }
 
-
-/*
- 
- SEMIMETRIC BASED ON DERIVATIVES
- 
-*/
-RcppExport SEXP SemimetricDerivDesign(SEXP BsplineDeriv, SEXP weightgauss, SEXP span) {
+//' Semimetric Derivative Design Matrix
+//' 
+//' Calculates design matrix for derivative-based semimetric
+//' 
+//' @param BsplineDeriv Numeric matrix of B-spline derivatives
+//' @param weightgauss Numeric vector of Gaussian quadrature weights
+//' @param span Numeric span of the grid
+//' @return Numeric matrix H-half matrix
+//' @keywords internal
+// [[Rcpp::export]]
+arma::mat SemimetricDerivDesign(const arma::mat& BsplineDeriv, 
+                                const arma::vec& weightgauss, 
+                                double span) {
     
-    Rcpp::NumericMatrix BDr(BsplineDeriv);
-    Rcpp::NumericVector wgr(weightgauss);
-    double sp = Rcpp::as<double>(span);
-    int n = BDr.nrow();
-    int m = BDr.ncol();
-    arma::mat BD(BDr.begin(), n, m, false);
+    const int n = BsplineDeriv.n_rows;
+    const int m = BsplineDeriv.n_cols;
+    
+    // Apply Gaussian quadrature weights
+    arma::vec wg = 0.5 * span * weightgauss;
     arma::mat Temp1(n, m);
-    arma::colvec wg(wgr.begin(), wgr.size(), true);
     
-    wg = 0.5 * sp * wg;
     for (int i = 0; i < m; i++) {
-        Temp1.col(i) = BD.col(i) % wg;
+        Temp1.col(i) = BsplineDeriv.col(i) % wg;
     }
-    arma::mat H = trans(BD) * Temp1;
+    
+    arma::mat H = BsplineDeriv.t() * Temp1;
+    
+    // Eigendecomposition
     arma::vec eigval;
     arma::mat eigvec;
-    
     arma::eig_sym(eigval, eigvec, H);
+    
+    // Take square root of positive eigenvalues
     eigval = arma::sqrt(eigval % (eigval > 0));
     
-    for (int i = 0; i < H.n_rows; i++) {
+    // Compute H^{1/2}
+    for (arma::uword i = 0; i < H.n_rows; i++) {
         H.col(i) = eigval(i) * eigvec.col(i);
     }
-    H = arma::trans(eigvec * arma::trans(H));
+    H = (eigvec * H.t()).t();
     
-    return Rcpp::wrap(H);
+    return H;
 }
 
-RcppExport SEXP SemimetricDeriv(SEXP Hhalf, SEXP Bspline, SEXP Data1, SEXP Data2, SEXP twodatasets) {
+//' Semimetric Based on Derivatives
+//' 
+//' Computes semimetric distance based on functional derivatives
+//' 
+//' @param Hhalf Numeric matrix H-half from SemimetricDerivDesign
+//' @param Bspline Numeric matrix of B-spline basis
+//' @param Data1 Numeric matrix of functional data (first dataset)
+//' @param Data2 Numeric matrix of functional data (second dataset)
+//' @param twodatasets Logical indicating if two datasets are used
+//' @return Numeric matrix of semimetric distances
+//' @keywords internal
+// [[Rcpp::export]]
+arma::mat SemimetricDeriv(const arma::mat& Hhalf, 
+                          const arma::mat& Bspline, 
+                          const arma::mat& Data1, 
+                          const arma::mat& Data2, 
+                          bool twodatasets) {
     
-    bool tds = Rcpp::as<bool>(twodatasets);
-    if (!tds) {
-        Rcpp::NumericMatrix Hr(Hhalf);
-        Rcpp::NumericMatrix Bsr(Bspline);
-        Rcpp::NumericMatrix Dr(Data1);
-        int n = Dr.nrow();
-        int nbasis = Hr.nrow();
+    const int n = Data1.n_rows;
+    const int nbasis = Hhalf.n_rows;
+    
+    // Calculate coefficient matrices
+    arma::mat Cmat = Bspline.t() * Bspline;
+    arma::mat Dmat1 = Bspline.t() * Data1.t();
+    
+    arma::mat Coef1 = (Hhalf * arma::solve(Cmat, Dmat1)).t();
+    
+    if (!twodatasets) {
+        // Single dataset case
+        arma::mat Semimetric = arma::zeros<arma::mat>(n, n);
         
-        arma::mat H(Hr.begin(), Hr.nrow(), Hr.ncol(), false);
-        arma::mat Bs(Bsr.begin(), Bsr.nrow(), Bsr.ncol(), false);
-        arma::mat D(Dr.begin(), Dr.nrow(), Dr.ncol(), false);
-        
-        arma::mat Cmat = arma::trans(Bs) * Bs;
-        arma::mat Dmat1 = arma::trans(Bs) * arma::trans(D);
-        
-        Rcpp::NumericMatrix C1r(n, nbasis);
-        arma::mat Coef1(C1r.begin(), C1r.nrow(), C1r.ncol(), false);
-        Coef1 = arma::trans(H * arma::solve(Cmat, Dmat1));
-        
-        Rcpp::NumericMatrix tempr;
-        arma::mat Semimetric;
-        Semimetric.zeros(n, n);
-        
-        Rcpp::NumericVector tempvec = C1r(Rcpp::_, 0);
         for (int i = 0; i < nbasis; i++) {
-            tempvec = C1r(Rcpp::_, i);
-            tempr = Rcpp::outer(tempvec, tempvec, std::minus<double>());
-            Semimetric = Semimetric + arma::square(Rcpp::as<arma::mat>(tempr));
+            arma::vec tempvec = Coef1.col(i);
+            
+            for (arma::uword row = 0; row < n; row++) {
+                for (arma::uword col = 0; col < n; col++) {
+                    double diff = tempvec(row) - tempvec(col);
+                    Semimetric(row, col) += diff * diff;
+                }
+            }
         }
-        return Rcpp::wrap(arma::sqrt(Semimetric)); 
+        return arma::sqrt(Semimetric);
     } else {
-        Rcpp::NumericMatrix Hr(Hhalf);
-        Rcpp::NumericMatrix Bsr(Bspline);
-        Rcpp::NumericMatrix D1r(Data1);
-        Rcpp::NumericMatrix D2r(Data2);
-        int n = D1r.nrow();
-        int m = D2r.nrow();
-        int nbasis = Hr.nrow();
+        // Two datasets case
+        const int m = Data2.n_rows;
+        arma::mat Dmat2 = Bspline.t() * Data2.t();
+        arma::mat Coef2 = (Hhalf * arma::solve(Cmat, Dmat2)).t();
         
-        arma::mat H(Hr.begin(), Hr.nrow(), Hr.ncol(), false);
-        arma::mat Bs(Bsr.begin(), Bsr.nrow(), Bsr.ncol(), false);
-        arma::mat D1(D1r.begin(), D1r.nrow(), D1r.ncol(), false);
-        arma::mat D2(D2r.begin(), D2r.nrow(), D2r.ncol(), false);
+        arma::mat Semimetric = arma::zeros<arma::mat>(n, m);
         
-        arma::mat Cmat = arma::trans(Bs) * Bs;
-        arma::mat Dmat1 = arma::trans(Bs) * arma::trans(D1);
-        arma::mat Dmat2 = arma::trans(Bs) * arma::trans(D2);
-        
-        Rcpp::NumericMatrix C1r(n, nbasis);
-        Rcpp::NumericMatrix C2r(m, nbasis);
-        arma::mat Coef1(C1r.begin(), C1r.nrow(), C1r.ncol(), false);
-        arma::mat Coef2(C2r.begin(), C2r.nrow(), C2r.ncol(), false);
-        Coef1 = arma::trans(H * arma::solve(Cmat, Dmat1));
-        Coef2 = arma::trans(H * arma::solve(Cmat, Dmat2));
-        
-        
-        Rcpp::NumericMatrix tempr(n, m);
-        arma::mat temp(tempr.begin(), n, m, false);
-        arma::mat Semimetric;
-        Semimetric.zeros(n, m);
-        
-        Rcpp::NumericVector tempvec1 = C1r(Rcpp::_, 0);
-        Rcpp::NumericVector tempvec2 = C2r(Rcpp::_, 0);
         for (int i = 0; i < nbasis; i++) {
-            tempvec1 = C1r( Rcpp::_, i);
-            tempvec2 = C2r( Rcpp::_, i);
-            tempr = Rcpp::outer(tempvec1, tempvec2, std::minus<double>());
-            Semimetric = Semimetric + arma::square(Rcpp::as<arma::mat>(tempr));
+            arma::vec tempvec1 = Coef1.col(i);
+            arma::vec tempvec2 = Coef2.col(i);
+            
+            for (arma::uword row = 0; row < n; row++) {
+                for (arma::uword col = 0; col < m; col++) {
+                    double diff = tempvec1(row) - tempvec2(col);
+                    Semimetric(row, col) += diff * diff;
+                }
+            }
         }
-        return Rcpp::wrap(arma::sqrt(Semimetric)); 
+        return arma::sqrt(Semimetric);
     }
 }

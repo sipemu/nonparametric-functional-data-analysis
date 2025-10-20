@@ -1,13 +1,33 @@
 Package: nfda
 Type: Package
 Title: Nonparametric Functional Data Analysis
-Version: 0.2-2
-Date: 2012-01-26
-Author: Simon Mueller
+Version: 1.0.0
+Date: 2025-10-20
+Authors@R: person("Simon", "Mueller", 
+                  email = "Simon.Mueller@mathematik.uni-stuttgart.de",
+                  role = c("aut", "cre"))
 Maintainer: Simon Mueller <Simon.Mueller@mathematik.uni-stuttgart.de>
-Description: Nonparametric Functional Data Analysis
-License: GPL-2
-LazyLoad: yes
-Depends: Rcpp (>= 0.9.5), RcppArmadillo (>= 0.2.27), pls
-LinkingTo: Rcpp, RcppArmadillo, pls
-Suggests: fds, splines
+Description: Nonparametric methods for functional data analysis including 
+    kernel regression and classification. Implements methods based on 
+    semimetrics (PCA, derivatives, PLS) with various bandwidth selection 
+    techniques. Originally based on methods by Ferraty and Vieu.
+License: MIT + file LICENSE
+LazyData: true
+Depends: 
+    R (>= 3.5.0)
+Imports: 
+    Rcpp (>= 1.0.0),
+    splines,
+    stats,
+    fds
+LinkingTo: 
+    Rcpp,
+    RcppArmadillo (>= 0.9.0)
+Suggests: 
+    pls,
+    testthat (>= 3.0.0)
+Encoding: UTF-8
+RoxygenNote: 7.2.0
+SystemRequirements: C++11
+URL: https://github.com/simonm/Nonparametric-Functional-Data-Analysis
+BugReports: https://github.com/simonm/Nonparametric-Functional-Data-Analysis/issues

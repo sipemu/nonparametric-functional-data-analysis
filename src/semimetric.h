@@ -1,21 +1,15 @@
 //
 //  semimetric.h
-//  
+//  Modern implementation with Rcpp attributes
 //
-//  Created by Simon Müller on 18.08.11.
-//
+//  Originally created by Simon Müller on 18.08.11.
+//  Modernized for current C++ and Rcpp standards
 
-#ifndef _semimetric_h
-#define _semimetric_h
+#ifndef NFDA_SEMIMETRIC_H
+#define NFDA_SEMIMETRIC_H
 
 #include <RcppArmadillo.h>
 
-// Semimetric based on PCA
-RcppExport SEXP SemimetricPCAEV(SEXP Data1, SEXP q);
-RcppExport SEXP SemimetricPCA(SEXP Eigenvec, SEXP Data1, SEXP Data2, SEXP twodatasets);
+// [[Rcpp::depends(RcppArmadillo)]]
 
-// Semimetric based on Derivatives
-RcppExport SEXP SemimetricDerivDesign(SEXP BsplineDeriv, SEXP weightgauss, SEXP span);
-RcppExport SEXP SemimetricDeriv(SEXP Hhalf, SEXP Bspline, SEXP Data1, SEXP Data2, SEXP twodatasets);
-
-#endif
+#endif // NFDA_SEMIMETRIC_H

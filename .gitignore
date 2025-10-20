@@ -1,0 +1,131 @@
+# R Build and Package Files
+*.o
+*.so
+*.dll
+*.dylib
+*.a
+*.lib
+
+# RcppExports (auto-generated)
+src/RcppExports.cpp
+R/RcppExports.R
+
+# Compiled Object files
+*.slo
+*.lo
+
+# R Check Output
+*.Rcheck/
+.Rcheck/
+
+# R History and Workspace
+.Rhistory
+.RData
+.Rdata
+.Ruserdata
+
+# R Project Files
+*.Rproj
+.Rproj.user/
+
+# Build directories
+src-i386/
+src-x86_64/
+src/*.o
+src/*.so
+src/*.dll
+
+# Package build artifacts
+/*.tar.gz
+/*.zip
+*.tar.gz
+*.tgz
+*_*.tar.gz
+*_*.zip
+
+# Documentation build files
+/doc/
+/Meta/
+/man/*.Rd~
+inst/doc/
+
+# Vignettes
+vignettes/*.html
+vignettes/*.pdf
+vignettes/*_cache/
+vignettes/*_files/
+
+# pkgdown
+docs/
+_pkgsite/
+
+# Test output
+tests/testthat/*.pdf
+tests/testthat/*.png
+tests/testthat/*.jpg
+tests/testthat/Rplots.pdf
+*.log
+
+# Temporary files
+*~
+*.swp
+*.swo
+*.tmp
+*.temp
+*_cache/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# IDE specific
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Session Data
+.RDataTmp
+.Rapp.history
+
+# OAuth2 token
+.httr-oauth
+.secrets
+
+# Translation temp files
+po/*~
+
+# Output files from R CMD build
+/*.Rproj.user
+
+# Output files from R CMD check
+00check.log
+
+# RStudio project files with user-specific data
+.Rproj.user
+
+# knitr and R markdown default cache directories
+*_cache/
+/cache/
+
+# Shiny token
+rsconnect/
+
