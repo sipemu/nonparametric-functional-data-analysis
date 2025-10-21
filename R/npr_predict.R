@@ -4,22 +4,14 @@
 #'
 #' @param object Object of class FuNopaRe from FuNopaRe function
 #' @param newdata Matrix of new functional data to predict
-#' @param method.params List of parameters for bootstrap (if Bootstrapping = TRUE):
-#'   \itemize{
-#'     \item Resampling.Method: "wild.continuous", "wild.twopoint", or "homoscedatic"
-#'     \item NB: Number of bootstrap samples
-#'     \item neighbours: Number of neighbours for bandwidth selection
-#'     \item alpha: Significance level for confidence intervals
-#'   }
-#' @param Bootstrapping Logical indicating whether to compute bootstrap confidence intervals
+#' @param bootstrap Logical indicating whether to compute bootstrap confidence intervals
+#' @param bootstrap_resampling_method Character string specifying resampling method:
+#'   "wild.continuous", "wild.twopoint", or "homoscedatic"
+#' @param bootstrap_samples Integer number of bootstrap samples
+#' @param bootstrap_neighbours Integer number of neighbours for bandwidth selection
+#' @param bootstrap_alpha Significance level for confidence intervals
 #' @param ... Additional arguments (not currently used)
-#' @return Updated FuNopaRe object with additional field:
-#'   \itemize{
-#'     \item Prediction: Vector of predicted values
-#'     \item loConfInt: Lower confidence interval (if Bootstrapping = TRUE)
-#'     \item upConfInt: Upper confidence interval (if Bootstrapping = TRUE)
-#'     \item method.params.bootstrap: Bootstrap parameters (if Bootstrapping = TRUE)
-#'   }
+#' @return Vector of predicted values
 #' @export
 #' @method predict FuNopaRe
 #' @examples
@@ -27,73 +19,77 @@
 #'   # Example usage
 #'   X <- matrix(rnorm(100 * 50), 100, 50)
 #'   Y <- rnorm(100)
-#'   params <- list(q = 2, nknot = 10, range.grid = c(0, 1))
-#'   model <- FuNopaRe(X, Y, "Deriv", params, "kNNgCV")
+#'   semimetric <- semiemetric_deriv$new(q = 2, nknot = 10, range.grid = c(0, 1))
+#'   model <- FuNopaRe(X, Y, semimetric, k_nearest_neighbors = 20L)
 #'   
 #'   X_new <- matrix(rnorm(10 * 50), 10, 50)
 #'   predictions <- predict(model, X_new)
 #' }
 predict.FuNopaRe <- function(object, 
                              newdata, 
-                             method.params = NULL, 
-                             Bootstrapping = FALSE, 
+                             bootstrap = FALSE, 
+                             bootstrap_resampling_method = c("wild.continuous", "wild.twopoint", "homoscedatic"),
+                             bootstrap_samples = 200,
+                             bootstrap_neighbours = 20,
+                             bootstrap_alpha = 0.05,
                              ...) {
-  
+  # Check if object is a valid FuNopaRe object
+  if (!inherits(object, "FuNopaRe")) {
+    stop("object must be a valid FuNopaRe object")
+  }
+  # Check if newdata is a matrix
+  if (!is.matrix(newdata)) {
+    stop("newdata must be a matrix")
+  }
+  # Check if bootstrap is a logical
+  if (!is.logical(bootstrap)) {
+    stop("bootstrap must be a logical")
+  }
+
   # Compute distance matrix between learning and new data
-  Dist <- Semimetric(object$X.learn, 
-                     newdata, 
-                     object$Semimetric, 
-                     object$semimetric.params)
-  DistMat <- Dist$semimetric
-  
-  if (object$Method == "KernelPredictionCV") {
+  distance_matrix <- object$semimetric$calculate(object$X, newdata)
+  if (object$bandwidth_method == "CV") {
     # Use fixed bandwidth
-    Y <- KernelPrediction(DistMat, 
-                         object$Y.learn, 
-                         object$h.opt)
-    object$Prediction <- Y
-    
-  } else if (object$Method == "KernelPredictionkNNgCV") {
-    # Use k-NN with global bandwidth
-    Y <- KernelPredictionkNN(DistMat, 
-                             object$Y.learn, 
-                             object$k.opt,
+    Y <- KernelPrediction(distance_matrix, 
+                         object$Y, 
+                         object$h_opt)
+  } else if (object$bandwidth_method == "kNNgCV") {
+    # Use k-NN with global selection
+    Y <- KernelPredictionkNN(distance_matrix, 
+                             object$Y, 
+                             object$k_opt,
                              FALSE)
-    object$Prediction <- Y
-    
-  } else if (object$Method == "KernelPredictionkNNlCV") {
+  } else if (object$bandwidth_method == "kNNlCV") {
     # Use k-NN with local bandwidth
-    Y <- KernelPredictionkNN(DistMat, 
-                             object$Y.learn, 
-                             object$k.opt,
+    Y <- KernelPredictionkNN(distance_matrix, 
+                             object$Y, 
+                             object$k_opt,
                              TRUE)
-    object$Prediction <- Y
   }
   
-  if (Bootstrapping) {
-    if (is.null(method.params)) {
-      stop("method.params must be provided when Bootstrapping = TRUE")
+  if (bootstrap) {
+    if (is.null(bootstrap_parameters)) {
+      stop("bootstrap_parameters must be provided when bootstrap = TRUE")
     }
     
     # Generate bootstrap samples
-    W <- BootstrapData(object$Y.learn, 
-                      object$Y.hat, 
-                      method.params$Resampling.Method, 
-                      method.params$NB)
+    W <- BootstrapData(object$Y, 
+                      object$Yhat, 
+                      bootstrap_resampling_method, 
+                      bootstrap_samples)
     
     # Compute bootstrap predictions
-    R <- KernelPredictionBoot(DistMat,
-                             object$Y.learn,
+    R <- KernelPredictionBoot(distance_matrix,
+                             object$Y,
                              Y,
                              W,
-                             method.params$neighbours)
+                             bootstrap_neighbours)
     
-    object$Prediction <- R$pred
-    z <- qnorm(method.params$alpha / 2)
-    object$loConfInt <- R$mu - z * sqrt(R$sigma / length(object$Prediction))
-    object$upConfInt <- R$mu + z * sqrt(R$sigma / length(object$Prediction))
-    object$method.params.bootstrap <- method.params
+    Y <- R$pred
+    z <- qnorm(bootstrap_alpha / 2)
+    lower <- R$mu - z * sqrt(R$sigma / length(object$Yhat))
+    upper <- R$mu + z * sqrt(R$sigma / length(object$Yhat))
   }
   
-  return(object)
+  return(list(yHat = Y, lower = lower, upper = upper))
 }

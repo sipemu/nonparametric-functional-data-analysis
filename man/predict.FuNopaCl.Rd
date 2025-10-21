@@ -10,15 +10,9 @@
 \item{object}{Object of class FuNopaCl from FuNopaCl function}
 
 \item{newdata}{Matrix of new functional data to predict}
-
-\item{...}{Additional arguments (not currently used)}
 }
 \value{
-Updated FuNopaCl object with additional fields:
-  \itemize{
-    \item classes.pred: Predicted class labels
-    \item Prob.pred: Probability matrix for predictions
-  }
+Predicted class labels
 }
 \description{
 Predicts class labels for new functional data using a trained FuNopaCl model

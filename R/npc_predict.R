@@ -4,12 +4,7 @@
 #'
 #' @param object Object of class FuNopaCl from FuNopaCl function
 #' @param newdata Matrix of new functional data to predict
-#' @param ... Additional arguments (not currently used)
-#' @return Updated FuNopaCl object with additional fields:
-#'   \itemize{
-#'     \item classes.pred: Predicted class labels
-#'     \item Prob.pred: Probability matrix for predictions
-#'   }
+#' @return Predicted class labels
 #' @export
 #' @method predict FuNopaCl
 #' @examples
@@ -26,19 +21,11 @@
 predict.FuNopaCl <- function(object, newdata, ...) {
   
   # Compute distance matrix between learning and new data
-  Dist <- Semimetric(object$X.learn, 
-                     newdata, 
-                     object$Semimetric, 
-                     object$semimetric.params)
-  DistMat <- Dist$semimetric
-  
+  distance_matrix <- object$semimetric$calculate(object$X, newdata)
   # Perform k-NN classification
-  Y <- KernelClassificationkNN(DistMat, 
-                               object$classes.learn, 
-                               object$k.opt)
+  classes_predicted <- KernelClassificationkNN(distance_matrix, 
+                               object$classes, 
+                               object$k_opt)
   
-  object$classes.pred <- Y$classes.predicted
-  object$Prob.pred <- Y$Prob.predicted
-  
-  return(object)
+  return(classes_predicted)
 }

@@ -4,33 +4,37 @@
 \alias{predict.FuNopaRe}
 \title{Predict Method for Functional Nonparametric Regression}
 \usage{
-\method{predict}{FuNopaRe}(object, newdata, method.params = NULL, Bootstrapping = FALSE, ...)
+\method{predict}{FuNopaRe}(
+  object,
+  newdata,
+  bootstrap = FALSE,
+  bootstrap_resampling_method = c("wild.continuous", "wild.twopoint", "homoscedatic"),
+  bootstrap_samples = 200,
+  bootstrap_neighbours = 20,
+  bootstrap_alpha = 0.05,
+  ...
+)
 }
 \arguments{
 \item{object}{Object of class FuNopaRe from FuNopaRe function}
 
 \item{newdata}{Matrix of new functional data to predict}
 
-\item{method.params}{List of parameters for bootstrap (if Bootstrapping = TRUE):
-\itemize{
-  \item Resampling.Method: "wild.continuous", "wild.twopoint", or "homoscedatic"
-  \item NB: Number of bootstrap samples
-  \item neighbours: Number of neighbours for bandwidth selection
-  \item alpha: Significance level for confidence intervals
-}}
+\item{bootstrap}{Logical indicating whether to compute bootstrap confidence intervals}
 
-\item{Bootstrapping}{Logical indicating whether to compute bootstrap confidence intervals}
+\item{bootstrap_resampling_method}{Character string specifying resampling method:
+"wild.continuous", "wild.twopoint", or "homoscedatic"}
+
+\item{bootstrap_samples}{Integer number of bootstrap samples}
+
+\item{bootstrap_neighbours}{Integer number of neighbours for bandwidth selection}
+
+\item{bootstrap_alpha}{Significance level for confidence intervals}
 
 \item{...}{Additional arguments (not currently used)}
 }
 \value{
-Updated FuNopaRe object with additional field:
-  \itemize{
-    \item Prediction: Vector of predicted values
-    \item loConfInt: Lower confidence interval (if Bootstrapping = TRUE)
-    \item upConfInt: Upper confidence interval (if Bootstrapping = TRUE)
-    \item method.params.bootstrap: Bootstrap parameters (if Bootstrapping = TRUE)
-  }
+Vector of predicted values
 }
 \description{
 Predicts response values for new functional data using a trained FuNopaRe model
@@ -40,8 +44,8 @@ Predicts response values for new functional data using a trained FuNopaRe model
   # Example usage
   X <- matrix(rnorm(100 * 50), 100, 50)
   Y <- rnorm(100)
-  params <- list(q = 2, nknot = 10, range.grid = c(0, 1))
-  model <- FuNopaRe(X, Y, "Deriv", params, "kNNgCV")
+  semimetric <- semiemetric_deriv$new(q = 2, nknot = 10, range.grid = c(0, 1))
+  model <- FuNopaRe(X, Y, semimetric, k_nearest_neighbors = 20L)
   
   X_new <- matrix(rnorm(10 * 50), 10, 50)
   predictions <- predict(model, X_new)

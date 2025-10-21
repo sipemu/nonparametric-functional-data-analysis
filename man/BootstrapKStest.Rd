@@ -4,24 +4,24 @@
 \alias{BootstrapKStest}
 \title{Calculate Optimal Two-Point Distribution Parameter}
 \usage{
-BootstrapKStest(Residuals, NB = 100, grid = 10)
+BootstrapKStest(residuals, bootstrap_samples = 100, n_grid_points = 10)
 }
 \arguments{
-\item{Residuals}{Numeric vector of residuals}
+\item{residuals}{Numeric vector of residuals}
 
-\item{NB}{Integer number of bootstrap samples (default: 100)}
+\item{bootstrap_samples}{Integer number of bootstrap samples (default: 100)}
 
-\item{grid}{Integer number of grid points for parameter search (default: 10)}
+\item{n_grid_points}{Integer number of grid points for parameter search (default: 10)}
 }
 \value{
-Matrix of bootstrap samples (n x NB)
+Matrix of bootstrap samples (n x bootstrap_samples)
 }
 \description{
 Uses Kolmogorov-Smirnov test to find optimal parameter for two-point distribution
 }
 \examples{
 \dontrun{
-  Residuals <- rnorm(100)
-  W <- BootstrapKStest(Residuals, 100, 10)
+  residuals <- rnorm(100)
+  W <- BootstrapKStest(residuals, bootstrap_samples = 100, n_grid_points = 10)
 }
 }

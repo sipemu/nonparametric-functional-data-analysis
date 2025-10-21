@@ -4,31 +4,40 @@
 \alias{FuNopaRe}
 \title{Functional Nonparametric Regression Learning}
 \usage{
-FuNopaRe(X, Y, semimetric = "Deriv", semimetric.params, bandwidth = "CV")
+FuNopaRe(
+  X,
+  Y,
+  semimetric,
+  bandwidth_method = c("CV", "kNNgCV", "kNNlCV"),
+  grid_of_bandwidths = NULL,
+  k_nearest_neighbors = 20L
+)
 }
 \arguments{
 \item{X}{Matrix of functional data (each row is an observation)}
 
 \item{Y}{Numeric vector of response values}
 
-\item{semimetric}{Character string specifying semimetric type (default: "Deriv")}
+\item{semimetric}{Semimetric object}
 
-\item{semimetric.params}{List of parameters for the semimetric}
-
-\item{bandwidth}{Character string specifying bandwidth selection method:
+\item{bandwidth_method}{Character string specifying bandwidth selection method:
 "CV" for cross-validation, "kNNgCV" for k-NN global CV, "kNNlCV" for k-NN local CV}
+
+\item{grid_of_bandwidths}{Numeric vector of bandwidth values for cross-validation}
+
+\item{k_nearest_neighbors}{Integer specifying the number of nearest neighbors for k-NN cross-validation}
 }
 \value{
 Object of class FuNopaRe containing:
   \itemize{
-    \item Semimetric: Name of the semimetric used
-    \item Method: Method used for prediction
-    \item semimetric.params: Parameters used for the semimetric
-    \item h.opt or k.opt: Optimal bandwidth or k value
-    \item mse.learn: Learning mean squared error
-    \item Y.hat: Fitted values
-    \item X.learn: Learning data
-    \item Y.learn: Learning response values
+    \item semimetric: Semimetric object
+    \item bandwidth_method: Bandwidth selection method used
+    \item grid_of_bandwidths: Grid of bandwidth values used for cross-validation
+    \item k_opt: Optimal k values from cross-validation
+    \item mse: Learning error rate
+    \item Yhat: Estimated response values for learning set
+    \item X: Learning data
+    \item Y: Learning response values
   }
 }
 \description{
@@ -39,7 +48,8 @@ Performs nonparametric regression for functional data using kernel methods
   # Example usage
   X <- matrix(rnorm(100 * 50), 100, 50)
   Y <- rnorm(100)
-  params <- list(q = 2, nknot = 10, range.grid = c(0, 1))
-  model <- FuNopaRe(X, Y, "Deriv", params, "kNNgCV")
+  semimetric <- semiemetric_deriv$new(q = 2, nknot = 10, range.grid = c(0, 1))
+  k_nearest_neighbors <- 20L
+  model <- FuNopaRe(X, Y, semimetric, k_nearest_neighbors)
 }
 }

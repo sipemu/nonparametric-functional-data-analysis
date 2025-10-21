@@ -5,16 +5,16 @@
 \title{Generate Bootstrap Data}
 \usage{
 BootstrapData(
-  Y.learn,
-  Y.learn.hat,
-  Resampling.Method = "homoscedatic",
-  NB = 100
+  Y,
+  Yhat,
+  bootstrap_resampling_method = c("homoscedatic", "wild.continuous", "wild.twopoint"),
+  bootstrap_samples = 100
 )
 }
 \arguments{
-\item{Y.learn}{Numeric vector of learning responses}
+\item{Y}{Numeric vector of learning responses}
 
-\item{Y.learn.hat}{Numeric vector of fitted values for learning data}
+\item{Yhat}{Numeric vector of fitted values for learning data}
 
 \item{Resampling.Method}{Character string specifying resampling method:
 "homoscedatic", "wild.continuous", or "wild.twopoint"}
@@ -30,7 +30,7 @@ Generates bootstrap samples using various resampling methods
 \examples{
 \dontrun{
   Y <- rnorm(100)
-  Y.hat <- rnorm(100)
-  W <- BootstrapData(Y, Y.hat, "homoscedatic", 100)
+  Yhat <- rnorm(100)
+  W <- BootstrapData(Y, Yhat, "homoscedatic", 100)
 }
 }

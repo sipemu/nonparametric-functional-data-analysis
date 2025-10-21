@@ -17,6 +17,7 @@ Depends:
     R (>= 3.5.0)
 Imports: 
     Rcpp (>= 1.0.0),
+    R6,
     splines,
     stats
 LinkingTo: 
@@ -25,9 +26,12 @@ LinkingTo:
 Suggests: 
     pls,
     fds,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 NeedsCompilation: yes
+VignetteBuilder: knitr
 URL: https://github.com/sipemu/nonparametric-functional-data-analysis
 BugReports: https://github.com/sipemu/nonparametric-functional-data-analysis/issues

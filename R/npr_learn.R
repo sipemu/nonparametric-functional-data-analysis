@@ -4,20 +4,21 @@
 #'
 #' @param X Matrix of functional data (each row is an observation)
 #' @param Y Numeric vector of response values
-#' @param semimetric Character string specifying semimetric type (default: "Deriv")
-#' @param semimetric.params List of parameters for the semimetric
-#' @param bandwidth Character string specifying bandwidth selection method:
+#' @param semimetric Semimetric object
+#' @param bandwidth_method Character string specifying bandwidth selection method:
 #'   "CV" for cross-validation, "kNNgCV" for k-NN global CV, "kNNlCV" for k-NN local CV
+#' @param grid_of_bandwidths Numeric vector of bandwidth values for cross-validation
+#' @param k_nearest_neighbors Integer specifying the number of nearest neighbors for k-NN cross-validation
 #' @return Object of class FuNopaRe containing:
 #'   \itemize{
-#'     \item Semimetric: Name of the semimetric used
-#'     \item Method: Method used for prediction
-#'     \item semimetric.params: Parameters used for the semimetric
-#'     \item h.opt or k.opt: Optimal bandwidth or k value
-#'     \item mse.learn: Learning mean squared error
-#'     \item Y.hat: Fitted values
-#'     \item X.learn: Learning data
-#'     \item Y.learn: Learning response values
+#'     \item semimetric: Semimetric object
+#'     \item bandwidth_method: Bandwidth selection method used
+#'     \item grid_of_bandwidths: Grid of bandwidth values used for cross-validation
+#'     \item k_opt: Optimal k values from cross-validation
+#'     \item mse: Learning error rate
+#'     \item Yhat: Estimated response values for learning set
+#'     \item X: Learning data
+#'     \item Y: Learning response values
 #'   }
 #' @export
 #' @examples
@@ -25,60 +26,66 @@
 #'   # Example usage
 #'   X <- matrix(rnorm(100 * 50), 100, 50)
 #'   Y <- rnorm(100)
-#'   params <- list(q = 2, nknot = 10, range.grid = c(0, 1))
-#'   model <- FuNopaRe(X, Y, "Deriv", params, "kNNgCV")
+#'   semimetric <- semiemetric_deriv$new(q = 2, nknot = 10, range.grid = c(0, 1))
+#'   k_nearest_neighbors <- 20L
+#'   model <- FuNopaRe(X, Y, semimetric, k_nearest_neighbors)
 #' }
 FuNopaRe <- function(X, 
                      Y, 
-                     semimetric = "Deriv", 
-                     semimetric.params, 
-                     bandwidth = "CV") {
+                     semimetric, 
+                     bandwidth_method = c("CV", "kNNgCV", "kNNlCV"),
+                     grid_of_bandwidths = NULL,
+                     k_nearest_neighbors = 20L) {
+  bandwidth_method <- match.arg(bandwidth_method, c("CV", "kNNgCV", "kNNlCV"))
+  
+  # Check if semimetric is a valid semimetric object
+  if (!inherits(semimetric, "semimetric")) {
+    stop("semimetric must be a valid semimetric object")
+  }
   
   # Initialize result object as a list
   z <- list()
-  sm <- paste("Semimetric", semimetric, sep = "")
-  method <- paste("KernelPrediction", bandwidth, sep = "")
-  z$Semimetric <- sm
-  z$Method <- method
-  z$semimetric.params <- semimetric.params
+  z$bandwidth_method <- bandwidth_method
   
   # Compute distance matrix
-  Dist <- Semimetric(X, X, z$Semimetric, z$semimetric.params)
-  DistMat <- Dist$semimetric
+  distance_matrix <- semimetric$calculate(X, X)
   
-  if (method == "KernelPredictionCV") {
+  if (bandwidth_method == "CV") {
     # Cross-validation bandwidth selection
-    band <- quantile(DistMat[row(DistMat) > col(DistMat)], 0.05)
-    h <- KernelPredictionCV(DistMat, Y, band)
+    if (is.null(grid_of_bandwidths)) {
+      grid_of_bandwidths <- quantile(distance_matrix[row(distance_matrix) > col(distance_matrix)], 0.05)
+    }
+    h <- KernelPredictionCV(distance_matrix, Y, grid_of_bandwidths)
     
-    z$h.opt <- h$hopt
-    z$mse.learn <- h$mse
+    z$h_opt <- h$hopt
+    z$mse <- h$mse
     z$hseq <- h$hseq
-    z$Y.hat <- h$yhat
+    z$Yhat <- h$yhat
     
-  } else if (method == "KernelPredictionkNNgCV") {
+  } else if (bandwidth_method == "kNNgCV") {
     # k-NN global cross-validation
-    k <- KernelPredictionkNNgCV(DistMat, Y, 20L)
+    k <- KernelPredictionkNNgCV(distance_matrix, Y, k_nearest_neighbors)
     
-    z$k.opt <- k$kopt + 1
-    z$mse.learn <- k$mse
-    z$Y.hat <- k$yhat
+    z$k_opt <- k$k.opt + 1
+    z$mse <- k$mse
+    z$Yhat <- k$yhat
     
-  } else if (method == "KernelPredictionkNNlCV") {
+  } else if (bandwidth_method == "kNNlCV") {
     # k-NN local cross-validation
-    k <- KernelPredictionkNNlCV(DistMat, Y, 20L)
+    k <- KernelPredictionkNNlCV(distance_matrix, Y, k_nearest_neighbors)
     
-    z$k.opt <- as.vector(k$kopt) + 1
-    z$mse.learn <- k$mse
-    z$Y.hat <- k$yhat
+    z$k_opt <- as.vector(k$kopt) + 1
+    z$mse <- k$mse
+    z$Yhat <- k$yhat
     
   } else {
-    stop(paste("Unknown bandwidth selection method:", bandwidth))
+    stop(paste("Unknown bandwidth selection method:", bandwidth_method))
   }
   
   class(z) <- "FuNopaRe"
-  z$X.learn <- X
-  z$Y.learn <- Y
+  z$semimetric <- semimetric
+  z$X <- X
+  z$Y <- Y
   
   return(z)
 }

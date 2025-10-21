@@ -4,28 +4,27 @@
 \alias{FuNopaCl}
 \title{Functional Nonparametric Classification Learning}
 \usage{
-FuNopaCl(X, classes, semimetric = "Deriv", semimetric.params)
+FuNopaCl(X, Y, semimetric, k_nearest_neighbors = 20L)
 }
 \arguments{
 \item{X}{Matrix of functional data (each row is an observation)}
 
-\item{classes}{Integer vector of class labels}
+\item{Y}{Integer vector of class labels}
 
-\item{semimetric}{Character string specifying semimetric type (default: "Deriv")}
+\item{semimetric}{Semimetric object}
 
-\item{semimetric.params}{List of parameters for the semimetric}
+\item{k_nearest_neighbors}{Integer specifying the number of nearest neighbors}
 }
 \value{
 Object of class FuNopaCl containing:
   \itemize{
-    \item Semimetric: Name of the semimetric used
-    \item semimetric.params: Parameters used for the semimetric
-    \item k.opt: Optimal k values from cross-validation
-    \item mse.learn: Learning error rate
-    \item classes.estimated: Estimated classes for learning set
-    \item Prob.estimated: Probability matrix for learning set
-    \item X.learn: Learning data
-    \item classes.learn: Learning class labels
+    \item semimetric: Semimetric object
+    \item k_opt: Optimal k values from cross-validation
+    \item mse: Learning error rate
+    \item Yhat: Estimated response values for learning set
+    \item prob_estimated: Probability matrix for learning set
+    \item X: Learning data
+    \item Y: Learning response values
   }
 }
 \description{
@@ -36,8 +35,8 @@ with local cross-validation
 \dontrun{
   # Example usage
   X <- matrix(rnorm(100 * 50), 100, 50)
-  classes <- rep(1:2, each = 50)
-  params <- list(q = 2, nknot = 10, range.grid = c(0, 1))
-  model <- FuNopaCl(X, classes, "Deriv", params)
+  Y <- rep(1:2, each = 50)
+  semimetric <- semiemetric_deriv$new(q = 2, nknot = 10, range.grid = c(0, 1))
+  model <- FuNopaCl(X, Y, semimetric, k_nearest_neighbors)
 }
 }
